@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <video id="video" src="" autoplay></video>
+    </div>
+    <div>
+        <button id="btn">Start recording</button>
+    </div>
+
+    <p>
+        <%= video._id %>
+    </p>
+    
+</body>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    
+
+let start = false
+let chunck =  []
+window.onload = function (){
+    navigator.mediaDevices.getUserMedia({
+        audio: false, 
+        video: true
+    }).then(stream =>{
+        document.getElementById('video').srcObject = stream
+        console.log(stream);
+        
+        mediaRecorder = new MediaRecorder(stream);
+    })
+}
+
+document.getElementById('btn').onclick = function(){
+    if (start==false) {
+        start=true
+        document.getElementById('btn').textContent = "Stop recording"
+        console.log("recording...........")
+        mediaRecorder.start(1000);
+
+        mediaRecorder.ondataavailable = (e) =>{
+            chunck.push(e.data);
+            var formData = new FormData();
+            var file = new File([e.data], 'file.mp4', {
+                type: 'video/mp4',
+                lastModified: Date()
+            });
+            formData.append("file", file)
+            console.log(e.data)
+            console.log(formData)
+            axios.post('/upload/<%= video._id %>' , formData).then((res)=>{
+                console.log(res)
+            })
+
+           
+        }
+    }
+    else{
+        start=false
+        document.getElementById('btn').textContent= "Start Recording"
+        mediaRecorder.stop()
+    }
+    
+
+
+}
+</script>
+</html>
